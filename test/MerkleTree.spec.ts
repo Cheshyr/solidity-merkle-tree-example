@@ -14,22 +14,43 @@ const hashfn = (element: any) => {
 
 const getProofData = (leaves: string[], target: number) => {
   const tree = new MerkleTree(leaves, hashfn, { hashLeaves: true })
-  const proof = tree.getProof(leaves[target])
+  const proof = tree.getProof(leaves[target], target) // bugfix, need target index
   const root = tree.getRoot()
+
+  // parse json, convert to discrete arrays
+  let proof_left: boolean[] = []
+  let proof_data: any[] = []
+
+  proof.forEach(element => {
+    if(element.position == 'left')
+    {
+      proof_left.push(true)
+    }
+    else
+    {
+      proof_left.push(false)
+    }
+    proof_data.push(element.data)
+  });
+
   return {
-    proof,
+    proof_left,
+    proof_data,
     root,
   }
 }
 
+
 // Helper function for when you want to check a valid proof
 const makeAndCheckProof = async (tree: Contract, leaves: string[], target: number): Promise<boolean> => {
-  const { proof, root } = getProofData(leaves, target)
+  
+  // adjusting to return discrete arrays
+  const { proof_left, proof_data , root } = await getProofData(leaves, target)
   return tree.verify(
     leaves[target],
     root,
-    leaves.length,
-    proof
+    proof_left, 
+    proof_data
   )
 }
 

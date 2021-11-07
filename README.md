@@ -21,3 +21,9 @@ It's also the sort of thing that I would quiz people on if hiring for a Solidity
 I'll fill this section out later.
 
 If you're reading this before I fill this section out, just try to fill out MerkleTree.sol and make the tests inside MerkleTree.spec.ts pass.
+
+
+yarn add hardhat ethers ethereum-waffle @nomiclabs/hardhat-ethers @nomiclabs/hardhat-waffle --dev
+yarn add mocha chai --dev
+yarn add typescript ts-node @types/node @types/mocha @types/chai --dev
+
