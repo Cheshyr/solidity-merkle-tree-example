@@ -48,13 +48,36 @@ contract MerkleTree_binary_array{
     ) public view returns (bool) {
 
         bytes32 local_proof = keccak256(_leaf);
-        
-        for(uint256 i = 0; i < proof_data.length; i++)
-        {
-            ((proof_left & 0x1) == 0x1) ?
-                local_proof = keccak256(abi.encodePacked(proof_data[i] ,local_proof)) :
-                local_proof = keccak256(abi.encodePacked(local_proof , proof_data[i]));
-            proof_left = proof_left >> 1;
+        assembly 
+        {   
+            let proof_length := mload(proof_data)
+            let proof_mem_loc := add(proof_data, 0x20)
+
+            for
+                { let end := add(proof_mem_loc, mul(proof_length, 0x20)) }
+                lt(proof_mem_loc, end)
+                { proof_mem_loc := add(proof_mem_loc, 0x20) }
+            {
+                let proof_node := mload(proof_mem_loc)
+
+                let mem_pos := 0
+                let left_flag := 0
+                left_flag := and(proof_left, 0x1)
+                
+                mem_pos := msize()  // find the top of the stack?
+                switch left_flag
+                case 1 {
+                    mstore(mem_pos, proof_node)
+                    mstore(add(mem_pos,32), local_proof) 
+                }
+                default
+                {
+                    mstore(mem_pos, local_proof)
+                    mstore(add(mem_pos,32), proof_node)
+                }
+                local_proof := keccak256(mem_pos, 64)
+                proof_left := shr(1, proof_left)
+            }
         }
         return (local_proof == _root);
     }
