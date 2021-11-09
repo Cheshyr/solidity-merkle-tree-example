@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-    // internal debug outputs; logs are type-specific (Bytes32, etc)
-    import { console } from "hardhat/console.sol";
+// internal debug outputs; logs are type-specific (Bytes32, etc)
+import { console } from "hardhat/console.sol";
 
-contract MerkleTree{
+contract MerkleTree_array_array{
 
     // merktletreejs returns json pairs, so removed struct; using direct arrays for now.
 
@@ -32,13 +32,30 @@ contract MerkleTree{
         }
     
         // we've executed the entire proof.  if it was valid, should match _root
-        if(local_proof == _root)
+        return (local_proof == _root);
+    }
+}
+
+contract MerkleTree_binary_array{
+
+    function verify(
+
+        bytes memory _leaf,
+        bytes32 _root,
+        uint256 proof_left,
+        bytes32[] memory proof_data 
+
+    ) public view returns (bool) {
+
+        bytes32 local_proof = keccak256(_leaf);
+        
+        for(uint256 i = 0; i < proof_data.length; i++)
         {
-            return true;
+            ((proof_left & 0x1) == 0x1) ?
+                local_proof = keccak256(abi.encodePacked(proof_data[i] ,local_proof)) :
+                local_proof = keccak256(abi.encodePacked(local_proof , proof_data[i]));
+            proof_left = proof_left >> 1;
         }
-        else
-        {
-            return false;
-        }
+        return (local_proof == _root);
     }
 }
